@@ -118,28 +118,22 @@ head(ff3f)
 write.csv(ff3f, "ff3f.csv")
 #==============================================
 #import data
-price.reorder<-read.csv('daily_price.csv', stringsAsFactors = FALSE)
-mkv.reorder<-read.csv('mkv.csv', stringsAsFactors = FALSE)
-price.reorder[1:5, 1:5]
-mkv.reorder[1:5, 1:5]
-ff3f.csv<-read.csv('ff3f.csv')
-head(ff3f.csv)
-# export data in rds so that the file size will be smaller than .csv
-saveRDS(price.reorder, file = "price_reorder")
-saveRDS(mkv.reorder, file = "mkv_reorder")
 #===================================================
 # start importing RDS data without .csv data 
 #===================================================
 price.reorder<-readRDS("price_reorder")
 mkv.reorder<-readRDS("mkv_reorder")
+ff3f.csv<-read.csv("ff3f.csv")
+head(ff3f.csv)
 #=================================================
 date.seq<-as.Date(as.character(price.reorder$date), "%Y%m%d")
 price.xts<-xts(price.reorder[,-c(1:2)], order.by = date.seq)
+head(price.xts)
 tickers<-colnames(price.xts)
 dim(price.xts)
 tickers.n<-length(tickers)
 #price.xts[1:5, 1:5]
-mkv.xts<-xts(mkv.order[,-c(1:2)], order.by = date.seq)
+mkv.xts<-xts(mkv.reorder[,-c(1:2)], order.by = date.seq)
 dim(mkv.xts)
 #mkv.xts[1:5, 1:5]
 ff3f.xts<-xts(ff3f.csv[,-1], order.by = date.seq)
