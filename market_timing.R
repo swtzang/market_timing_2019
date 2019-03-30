@@ -177,8 +177,13 @@ weights.yi = 1/tapply(rep(1,tickers.n), ranking.tw, sum)[ranking.tw]
 weights.yi[1:10]
 # First we arrange data by year
 # In order not to get missing data for long time moving average such as 200-day MA, 
-# I extend the year data by including previous 10 months so that we can get 200-day MA for each day
-# For example, for data of year 1991, I include data from 1990-03 to 1991-12 as the data for 1991. 
+# I extend the year data by including previous 10 months so that we can get 
+# 200-day MA for each day
+# For example, for data of year 1991, I include data from 1990-03 to 1991-12 
+# as the data for 1991. 
+# PP.y = average stock prices in each decile portfolio sorted by the volatility
+#  in each year
+# PP.yi = average stock prices in year i for each decile portfolio sorted by the volatility
 PP.y<-list()
 t=1990
 for (t in 1990:2016){
@@ -192,6 +197,7 @@ for (t in 1990:2016){
   period<-paste(year, "-3/", sep="")
   period<-paste(period, paste(as.character(year1), "-12", sep=""), sep="")
   price.j<-price.xts[period]
+  # price.j = daily prices from 1990-3/1991-12 for all stocks
   price.j<-na.locf(price.j, fromLast = T)
   PP.yi<-price.j*NA
   PP.yi<-PP.yi[,1:10]
@@ -208,8 +214,6 @@ head(PP.y[['1991']])
 # For each year, we need to generate 2 sets of decile portfolios: one is benchmark portfolios 
 # sorted by standard deviation; the other is market timing MA portfolios
 
-
-
 # j-th portfolio price at day d
 #price.j<-price.xts["1990-3/1991-12"]
 #price.j<-na.locf(price.j, fromLast = T)
@@ -225,13 +229,11 @@ head(PP.y[['1991']])
 #}
 
 head(PP.yi)
-
+tail(PP.yi)
 #sma.fast = SMA(prices, 20)
 #sma.fast = PP.yi[,1]
 #sma.slow = SMA(PP.yi[,1], 20)
 #buy.signal = iif(cross.up(sma.fast, sma.slow), 1, NA)
-
-
 #data$weight[] = NA
 #data$weight[] = iif(cross.up(sma.fast, sma.slow), 1, iif(cross.dn(sma.fast, sma.slow), 0, NA))
 # model1 (buy and hold) is the volatility decile portfolio returns, which will be used as a benchmark for
@@ -240,12 +242,13 @@ data.1<-new.env()
 model1<-list()
 bench<-list()
 #prices = data$prices 
-j="2017"
+j="1991"
 i=1
 for (j in names(PP.y)){
   for (i in 1:10){
     sma.fast = PP.y[j][[1]][,i]
     data.1$prices = sma.fast[j]
+    # buy and hold strategy as a benchmark 
     data.1$execution.price = data.1$prices*NA
     data.1$weight = data.1$prices*NA
     data.1$weight[] = 1
@@ -253,8 +256,9 @@ for (j in names(PP.y)){
   }
   bench[[j]] = model1
 }
-
+#-----------------------------------------------------------------------
 # row bind the returns of decile portfolio from 1991 to 2017
+# benchRet.i = returns of decile portfolios in each year from 1991-2017
 benchRet.i<-list()
 i="1991"
 j=1
@@ -267,7 +271,9 @@ for (i in names(PP.y)){
   #tempi<-tempij[,c(seq(10,1,by=-1))]
   benchRet.i[[i]]<-tempi[,-1]
 }
-
+names(benchRet.i)
+# benchmark daily returns from 1990/03 - 1991/12
+benchRet.i[[2]]
 #ret2017.bench<-benchRet.i[['2017']]
 
 benchRet<-do.call(rbind, benchRet.i)
@@ -333,7 +339,7 @@ for (j in names(PP.y)){
 
 # row bind the returns of decile portfolio from 1991 to 2017
 momRet.i<-list()
-
+# 
 i="1991"
 i='2017'
 j=1
