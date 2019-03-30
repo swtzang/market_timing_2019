@@ -79,15 +79,16 @@ library(lmtest)
 #===============================
 # setwd("~/Market Timing Strategy")
 # import daily closing price of all listed stocks from 1990-2017
-#price = read.table("TWSE_1990_2017_d_close.txt", stringsAsFactors=FALSE, fileEncoding="UTF-8")
-price = read.table("TWSE_1990_2017_d1_close.txt")
-head(price)
-price = price[,-2]
-price = price[-1,]
-head(price,10)
-colnames(price) = c("id","date","close", "cap")
-dim(price)
-head(price)
+#-------------------------------------------------------------------------------
+#price = read.table("TWSE_1990_2017_d1_close.txt", header = T, stringsAsFactors=FALSE, fileEncoding="UTF-8")
+#head(price)
+#price = price[,-2]
+#head(price,10)
+#dim(price)
+#head(price)
+#saveRDS(price, file = "price")
+#------------------------------------------------------------------
+price = readRDS("price")
 # use dcast to reorder dataframe by date;
 mkv<-price[,-3]
 price<-price[,-4]
@@ -102,8 +103,8 @@ class(price.reorder)
 dim(price.reorder)
 #=============================================
 # output data
-write.csv(price.reorder, "daily_price.csv")
-write.csv(mkv, "mkv.csv")
+saveRDS(price.reorder, "price_reorder")
+saveRDS(mkv, "mkv_reorder")
 #==============================================
 ff3f = read.table("FF3F_1990_2017_d.txt")
 head(ff3f)
