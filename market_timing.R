@@ -28,7 +28,7 @@ close(con)
 #*****************************************************************
 # Load historical data
 #****************************************************************** 
-load.packages('quantmod') 
+load.packag('quantmod') 
 load.packages('PerformanceAnalytics')
 load.packages('reshape2')
 load.packages('fBasics')
@@ -66,6 +66,8 @@ library(rbenchmark)
 library(sandwich)
 library(dynlm)
 library(lmtest)
+#library(tidyverse)
+#library(quantmod)
 
 #=========================================================================
 # The following part is about importing raw data and restructuring data
@@ -94,6 +96,7 @@ mkv<-price[,-3]
 price<-price[,-4]
 price.reorder = dcast(price,date~id)
 price.reorder[1:5, 1:5]
+tail(price.reorder)[1:5, 1:5]
 mkv<-dcast(mkv, date~id)
 class(mkv)
 mkv[1:5, 1:5]
@@ -143,12 +146,16 @@ head(ff3f.xts)
 dim(ff3f.xts)
 #===================================================
 # compute daily returns
-ret<-price.xts/lag(price.xts) -1
+#ret <- ROC(price.xts, type = 'discrete')
+ret <- price.xts/lag(price.xts) -1
 ret[1:5, 1:5]
 ret.yi<-ret["1990"]
 tail(ret.yi)
-period.ends<-endpoints(mkv.xts, on = 'years')
-period.ends<-period.ends[period.ends>0]
+
+# mkv.xts %>% endpoints(., on  = 'years')
+            
+period.ends <- endpoints(mkv.xts, on = 'years')
+period.ends <- period.ends[period.ends>0]
 period.ends
 #compute std using daily returns of 1990
 sd.yi<-apply(ret.yi, 2, sd, na.rm = TRUE)
@@ -179,30 +186,31 @@ weights.yi[1:10]
 # PP.y = average stock prices in each decile portfolio sorted by the volatility
 #  in each year
 # PP.yi = average stock prices in year i for each decile portfolio sorted by the volatility
-PP.y<-list()
+PP.y <- list()
 t=1990
 for (t in 1990:2016){
-  year<-as.character(t)
-  ret.yi<-ret[year]
+  year <- as.character(t)
+  ret.yi <- ret[year]
   #compute std using daily returns of 1990
-  sd.yi<-apply(ret.yi, 2, sd, na.rm = TRUE)
+  sd.yi <- apply(ret.yi, 2, sd, na.rm = TRUE)
   # rank return volatility in 1990 into deciles 
   ranking.tw = ceiling(n.quantiles * rank(sd.yi, na.last = 'keep','first') / count(sd.yi))
-  year1<-t+1
-  period<-paste(year, "-3/", sep="")
-  period<-paste(period, paste(as.character(year1), "-12", sep=""), sep="")
-  price.j<-price.xts[period]
+  year1 <- t+1
+  period <- paste(year, "-3/", sep="")
+  period <- paste(period, paste(as.character(year1), "-12", sep=""), sep="")
+  price.j <- price.xts[period]
   # price.j = daily prices from 1990-3/1991-12 for all stocks
-  price.j<-na.locf(price.j, fromLast = T)
-  PP.yi<-price.j*NA
-  PP.yi<-PP.yi[,1:10]
+  price.j <- na.locf(price.j, fromLast = T)
+  PP.yi <- price.j*NA
+  PP.yi <- PP.yi[,1:10]
+  # d = 1
   for (d in 1:nrow(price.j)){
     PPjd <- tapply(coredata(price.j[d,]), ranking.tw, mean, na.rm = T)
-    PP.yi[d,]<-PPjd
+    PP.yi[d,] <- PPjd
   }
-  colnames(PP.yi)<-c("Q1", "Q2","Q3", "Q4", "Q5", "Q6","Q7", "Q8","Q9", "Q10")
-  year1<-as.character(year1)
-  PP.y[[year1]]<-PP.yi
+  colnames(PP.yi) <- c("Q1", "Q2","Q3", "Q4", "Q5", "Q6","Q7", "Q8","Q9", "Q10")
+  year1 <- as.character(year1)
+  PP.y[[year1]] <- PP.yi
 }
 names(PP.y)
 head(PP.y[['1991']])
@@ -237,13 +245,12 @@ data.1<-new.env()
 model1<-list()
 bench<-list()
 #prices = data$prices 
-j="1991"
+j="2017"
 i=1
 for (j in names(PP.y)){
   for (i in 1:10){
     sma.fast = PP.y[j][[1]][,i]
     data.1$prices = sma.fast[j]
-    # buy and hold strategy as a benchmark 
     data.1$execution.price = data.1$prices*NA
     data.1$weight = data.1$prices*NA
     data.1$weight[] = 1
