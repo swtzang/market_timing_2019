@@ -163,6 +163,18 @@ head(sd.yi)
 # calculate the number of stocks with available sd in year 1990
 sum(!is.na(sd.yi))
 sum(!is.na(tail(ret.yi,1)))
+# number of firm observation by year
+firm_obs <- list()
+yr <- 1990:2017
+i = 1990
+for (i in yr){
+  ret.y <- ret[as.character(i)]
+  firm_obs[[i]] <- sum(!is.na(tail(ret.y, 1)))
+}
+unlist(firm_obs)
+
+
+
 # daily std of year 1990
 #std.yi <- as.vector(sd(coredata(ret.yi), na.rm = TRUE))
 n.quantiles = 10
@@ -261,6 +273,8 @@ for (j in names(PP.y)){
 #-----------------------------------------------------------------------
 # row bind the returns of decile portfolio from 1991 to 2017
 # benchRet.i = returns of decile portfolios in each year from 1991-2017
+# benchmark return: buy-and-hold for decile portfolios
+#-----------------------------------------------------------------------
 benchRet.i<-list()
 i="1991"
 j=1
@@ -282,7 +296,7 @@ benchRet<-do.call(rbind, benchRet.i)
 #write.csv(benchRet, "benchRet.csv")
 dim(benchRet)
 head(benchRet)
-benchRet$Q10_1<-benchRet[,10] - benchRet[,1]
+benchRet$Q10_1<- benchRet[,10] - benchRet[,1]
 temp1<-benchRet
 avg1<-apply(coredata(temp1), 2, mean)*252
 std1<-apply(coredata(temp1), 2, stdev)*sqrt(252)
@@ -315,6 +329,9 @@ tab1.panA
 #plotbt.strategy.sidebyside(model1)
 #=======================================================================
 # data2 = momentum strategy 
+# if sma(k = 10) > closing price, then sell and hold cash
+# else buy the stocks
+#-----------------------------------------------------------------------
 data2<-new.env()
 model2<-list()
 # market timing portfolio
@@ -326,7 +343,7 @@ c = 0 # cumulative returns hurdle rate
 #
 for (j in names(PP.y)){
   for (q in 1:10){
-    mom.n = momentum(PP.y[j][[1]][,q], n=k, na.pad = TRUE)
+    mom.n = momentum(PP.y[j][[1]][,q], n = k, na.pad = TRUE)
     mom.n<-mom.n[j]
     data2$prices<-PP.y[j][[1]][,q][j]
     data2$weight = data2$prices*NA
@@ -414,23 +431,6 @@ tab1.panC.mom
 write.csv(tab1.panC.mom, "tab1_panC_mom_15.csv")
 # following Table 4 format but using map(20.50) to denote fma(20-d) and sma(50-d) 
 tab4.fma.sma<-tab1.panC[,-c(2,3)]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #============================================================
